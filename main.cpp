@@ -4,8 +4,22 @@
 #include <unistd.h>
 #include <memory.h>
 #include <string.h>
-#include "sha256.h"
+extern "C" {
+    #include "sha256.h"
+}
 
+void getKey(char* pwd, BYTE *buf){
+    SHA256_CTX ctx;
+    int idx;
+    
+    BYTE *pwdArr = reinterpret_cast<unsigned char*>(pwd); 
+    std::cout << pwdArr << std::endl;
+    sha256_init(&ctx);
+    for (idx = 0; idx < 100000; ++idx)
+	   sha256_update(&ctx, pwdArr, sizeof(pwdArr)/sizeof(BYTE) );
+	sha256_final(&ctx, buf);
+
+}
 
 int main(int argc, char *argv[]){
     if (argc < 3){
@@ -43,9 +57,19 @@ int main(int argc, char *argv[]){
         
         std::cout << pwd << std::endl;
         //sha256 on password 10000 times. 
+        BYTE buf[SHA256_BLOCK_SIZE];
+        memset(buf, 0, sizeof(buf));
+        getKey(pwd, buf);
+        for(int i = 0; i < strlen(buf); i++){
+            std::cout << buf[i]; 
+        }
+        std::cout << std::endl;
     }
     else {
         std::cout << "You have inputted an incorrect command. The options are list, add, extract, and delete." << std::endl; 
     }
 
-}   
+}  
+
+
+
