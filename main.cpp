@@ -12,14 +12,33 @@ void getKey(char* pwd, BYTE *buf){
     SHA256_CTX ctx;
     int idx;
     
-    BYTE *pwdArr = reinterpret_cast<unsigned char*>(pwd); 
-    std::cout << pwdArr << std::endl;
+    BYTE pwdArr[strlen(pwd)] = {0};
+    
+    for(int i = 0; i < strlen(pwd); i++){
+        pwdArr[i] = static_cast<BYTE>(pwd[i]);
+    }
+
+    
+    //std::cout << "pwdArr: " <<  pwdArr << std::endl;
+    std::cout << "pwd: " << pwd << std::endl;
+
+    //sha256_init(&ctx);
+    //sha256_init(&ctx);
     sha256_init(&ctx);
-    for (idx = 0; idx < 100000; ++idx)
-	   sha256_update(&ctx, pwdArr, sizeof(pwdArr)/sizeof(BYTE) );
+    sha256_update(&ctx, pwdArr, strlen(pwd));
+    sha256_final(&ctx, buf);
+
+    for ( idx = 0; idx < 100000; ++idx){ 
+        sha256_init(&ctx);
+        sha256_update(&ctx, buf, SHA256_BLOCK_SIZE);
+        sha256_final(&ctx, buf); 
+    }
 	sha256_final(&ctx, buf);
 
+    //std::cout << "buf: " << buf << std::endl;
+
 }
+
 
 int main(int argc, char *argv[]){
     if (argc < 3){
@@ -45,6 +64,12 @@ int main(int argc, char *argv[]){
 
                 password_found = true; 
                 pwd = argv[i+1];
+                //char* pwd_test = getpass("Password:"); 
+                //std::cout << strcmp(pwd, pwd_test) << std::endl;
+                //BYTE buf[SHA256_BLOCK_SIZE];
+
+                //getKey(pwd_test, buf);
+                //std::cout << buf << std::endl;
                 break; 
                 //password == argv +1
             }
@@ -60,10 +85,15 @@ int main(int argc, char *argv[]){
         BYTE buf[SHA256_BLOCK_SIZE];
         memset(buf, 0, sizeof(buf));
         getKey(pwd, buf);
-        for(int i = 0; i < strlen(buf); i++){
-            std::cout << buf[i]; 
+        //std::cout << buf << std::endl;
+    
+        for (int i = 0; i < SHA256_BLOCK_SIZE; i++){
+            std::cout << buf[i] ;
+
         }
+    
         std::cout << std::endl;
+    
     }
     else {
         std::cout << "You have inputted an incorrect command. The options are list, add, extract, and delete." << std::endl; 
