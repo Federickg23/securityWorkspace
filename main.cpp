@@ -1,29 +1,22 @@
 #include <iostream> 
+#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <memory.h>
 #include <string.h>
+#include <sys/stat.h>
 extern "C" {
     #include "sha256.h"
+    #include "aes.h"
 }
 
 void getKey(char* pwd, BYTE *buf){
     SHA256_CTX ctx;
     int idx;
     
-    BYTE pwdArr[strlen(pwd)] = {0};
+    BYTE *pwdArr = reinterpret_cast<unsigned char*>(pwd);
     
-    for(int i = 0; i < strlen(pwd); i++){
-        pwdArr[i] = static_cast<BYTE>(pwd[i]);
-    }
-
-    
-    //std::cout << "pwdArr: " <<  pwdArr << std::endl;
-    std::cout << "pwd: " << pwd << std::endl;
-
-    //sha256_init(&ctx);
-    //sha256_init(&ctx);
     sha256_init(&ctx);
     sha256_update(&ctx, pwdArr, strlen(pwd));
     sha256_final(&ctx, buf);
@@ -35,10 +28,29 @@ void getKey(char* pwd, BYTE *buf){
     }
 	sha256_final(&ctx, buf);
 
-    //std::cout << "buf: " << buf << std::endl;
-
 }
 
+void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files, char* mode){
+
+    //returns -1 if archive is already created
+    mkdir(archive_name, 0);
+    
+    if(strcmp(mode, "add") == 0){
+        std::fstream FileNames;
+        FileNames.open("filenames.txt");
+        for(int i = 0; i < files; i++){
+            std::fstream MyFile;
+            MyFile.open(strcat(archive_name, strcat((char *)"/", file_names[i])));
+            MyFile << "test";
+            FileNames << file_names[i] << std::endl; 
+            MyFile.close();
+        }
+        FileNames.close();
+    }
+
+
+
+}
 
 int main(int argc, char *argv[]){
     if (argc < 3){
@@ -50,50 +62,64 @@ int main(int argc, char *argv[]){
     }
     else if (argc == 3 && strcmp(argv[1], "list") == 0){
         //Do a thing here to list the archive
-        std::cout << "Entered list archive" << std::endl;
+        //std::cout << "Entered list archive" << std::endl;
     }
     else if (strcmp(argv[1], "add") == 0 || strcmp(argv[1], "extract") == 0 || strcmp(argv[1], "delete") == 0){
 
         std::cout << "Entered " << argv[1] << std::endl;
         bool password_found = false; 
         char *pwd; 
+        char *archive_name; 
+        char **file_names; 
+        int files; 
         //Look for -p and if there is a -p, the next term is password
         //if not, prompt the user for the password 
-        for( int i = 0; i < argc-1; i++){
-            if(strcmp(argv[i], "-p") == 0){
+        //for( int i = 0; i < argc-1; i++){
+        if(strcmp(argv[2], "-p") == 0){
 
-                password_found = true; 
-                pwd = argv[i+1];
-                //char* pwd_test = getpass("Password:"); 
-                //std::cout << strcmp(pwd, pwd_test) << std::endl;
-                //BYTE buf[SHA256_BLOCK_SIZE];
+            password_found = true; 
+            pwd = argv[3];
+        //        break; 
+        }
+        //}
 
-                //getKey(pwd_test, buf);
-                //std::cout << buf << std::endl;
-                break; 
-                //password == argv +1
+        if (!password_found){
+            pwd = getpass("Password:");
+            archive_name = argv[2]; 
+            file_names = new char*[argc-3]; 
+            files = argc-3;
+            for(int i = 3; i < argc; i++){
+                file_names[i] = argv[i]; 
+                std::cout << file_names[i] << std::endl;
+            }
+        } else {
+            archive_name = argv[4]; 
+            file_names = new char*[argc-5];
+            files = argc-5;
+            for(int i = 4; i < argc; i++){
+                file_names[i] = argv[i]; 
+                std::cout << file_names[i] << std::endl; 
             }
         }
 
-        if (!password_found){
-            //getpass, figure out return type, and make the password that return type
-            pwd = getpass("Password:");
-        }
+        std::cout << archive_name << std::endl; 
+       
+
         
-        std::cout << pwd << std::endl;
+        //std::cout << pwd << std::endl;
         //sha256 on password 10000 times. 
         BYTE buf[SHA256_BLOCK_SIZE];
         memset(buf, 0, sizeof(buf));
         getKey(pwd, buf);
-        //std::cout << buf << std::endl;
     
         for (int i = 0; i < SHA256_BLOCK_SIZE; i++){
             std::cout << buf[i] ;
 
         }
-    
         std::cout << std::endl;
     
+        manage_archive(buf, archive_name, file_names,files, argv[1]);
+
     }
     else {
         std::cout << "You have inputted an incorrect command. The options are list, add, extract, and delete." << std::endl; 
