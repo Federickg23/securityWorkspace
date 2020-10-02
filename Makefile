@@ -20,7 +20,7 @@ clean:
 
 .PHONY: install
 install:
-	cp ./cstore usr/local/bin
+	sudo cp cstore /usr/local/bin/
 
 
 .PHONY: all
