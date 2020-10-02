@@ -18,5 +18,10 @@ aes.o: aes.c aes.h
 clean:
 	rm -f main.o .main.cpp.swp sha256.o aes.o vgcore.*
 
+.PHONY: install
+install:
+	cp ./cstore usr/local/bin
+
+
 .PHONY: all
 all: clean cstore

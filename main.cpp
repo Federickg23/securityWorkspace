@@ -36,15 +36,17 @@ void hmac_archive(BYTE *buf, char *archive_name, BYTE *hmac_buf){
     while (std::getline(infile, line)){
         std::ifstream t;
         int length;
-        t.open(line);   
+        std::cout << line << std::endl;
+        t.open(line, std::ios::binary);   
         t.seekg(0, std::ios::end);    
         length = t.tellg();           
         t.seekg(0, std::ios::beg);    
         char *buffer = new char[length];
         t.read(buffer, length);       
         t.close(); 
+        strcpy(&archive_text[archive_len], buffer);
+
         archive_len += length; 
-        strcat(archive_text, buffer);
         delete[] buffer; 
     }
     
@@ -80,7 +82,7 @@ void hmac_archive(BYTE *buf, char *archive_name, BYTE *hmac_buf){
     sha256_update(&ctx, complete_mac, strlen((char *)complete_mac)); 
     sha256_final(&ctx, hmac_buf); 
     
-    
+
     delete[] archive_text; 
     delete[] right; 
     delete[] complete_mac; 
@@ -201,7 +203,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
             length = inFile.tellg();  
             origLength = inFile.tellg(); 
             inFile.seekg(0, std::ios::beg);    
-            int paddingBytes = length % AES_BLOCK_SIZE; 
+            int paddingBytes = AES_BLOCK_SIZE-(length % AES_BLOCK_SIZE); 
             if(paddingBytes == 0){
                 length += AES_BLOCK_SIZE;    
             }
@@ -217,28 +219,53 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
             
             
             //int paddingBytes = length % AES_BLOCK_SIZE; 
-            for(int idx = origLength; idx < length; idx++ ){
+            for(int idx = origLength; idx < length-1; idx++ ){
                 strcat(buffer, "0"); 
             }
-            
-            if(paddingBytes >= 0 && paddingBytes < 10 ){
-                const char retValue[1] = {(char) paddingBytes};
-                strcat(buffer, retValue);
+            std::cout << "padding bytes: " << paddingBytes << std::endl; 
+            //paddingBytes --; 
+            if(paddingBytes == 0){
+                strcat(buffer, "0");
             }
-            else if(paddingBytes == 11){
+            else if(paddingBytes == 1){
+                strcat(buffer, "1");     
+            } else if(paddingBytes == 2){
+                strcat(buffer, "2");     
+            } else if(paddingBytes == 3){
+                strcat(buffer, "3");     
+            } else if(paddingBytes == 4){
+                strcat(buffer, "4");     
+            } else if(paddingBytes == 5){
+                strcat(buffer, "5");     
+            } else if(paddingBytes == 6){
+                strcat(buffer, "6");     
+            } else if(paddingBytes == 7){
+                strcat(buffer, "7");     
+            } else if(paddingBytes == 8){
+                strcat(buffer, "8");     
+            } else if(paddingBytes == 9){
+                strcat(buffer, "9");
+            }
+            else if(paddingBytes == 10){
                 strcat(buffer,"A");
             }
-            else if(paddingBytes == 12) {
-                strcat(buffer, "B");
+            else if(paddingBytes == 11){
+                strcat(buffer,"B");
             }
-            else if(paddingBytes == 13){
+            else if(paddingBytes == 12) {
                 strcat(buffer, "C");
             }
+            else if(paddingBytes == 13){
+                strcat(buffer, "D");
+            }
             else if(paddingBytes == 14){
-                strcat(buffer,  "D");
+                strcat(buffer,  "E");
+            }
+            else if(paddingBytes == 15){
+                strcat(buffer, "F");
             }
             else{
-                strcat(buffer, "E");
+                strcat(buffer, "0"); 
             }
 
             //strcat(buffer, int_to_hex(paddingBytes));
@@ -256,6 +283,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
             BYTE buf_in[AES_BLOCK_SIZE], buf_out[AES_BLOCK_SIZE], iv_buf[AES_BLOCK_SIZE];
 	        int blocks = length/AES_BLOCK_SIZE;
 
+            memcpy(iv_buf, IV, AES_BLOCK_SIZE); 
 
             for (int idx = 0; idx < blocks; idx++) {
 		        memcpy(buf_in, &plaintext[idx * AES_BLOCK_SIZE], AES_BLOCK_SIZE);
@@ -271,57 +299,240 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
 
             std::cout << "before printing to file" << std::endl; 
             print_hex(ciphertext, 16+length); 
-        
+            
+            length+=16;
             std::cout << std::endl;
 
             //now gotta do hmac checking.
             
             char codeFile[256]; 
-            strcat(codeFile, archive_name); 
+            std::cout << "archive_name: " << archive_name << std::endl;
+            strcpy(codeFile, archive_name); 
             strcat(codeFile, "/.code");
+            std::cout << std::endl; 
+            std::cout << codeFile << std::endl;
             if(created == 0){
-                std::ofstream currFile(filePath);
-                currFile.write((const char*)ciphertext, sizeof(ciphertext));
-                print_hex(ciphertext, 16+length);
+                std::ofstream currFile(filePath, std::ios::binary);
+                currFile.write((const char*)ciphertext, length);
+                print_hex(ciphertext, length);
+                std::cout << std::endl;
                 MyFile <<  filePath << std::endl;  
                 currFile.close(); 
             }
             else if(FILE *file = fopen(codeFile, "r")){
                 if(integrity_test(buf, archive_name, codeFile)){
-                    std::ofstream currFile(filePath);
-                    currFile.write((const char*)ciphertext, sizeof(ciphertext));
+                    std::ofstream currFile(filePath, std::ios::binary);
+                    currFile.write((const char*)ciphertext, length);
                     MyFile <<  filePath << std::endl;  
                     currFile.close(); 
                     fclose(file); 
                 }
                 else{
                     std::cout << "Password rejected" << std::endl; 
-                    fclose(file);
                     break;
                 }
-                fclose(file); 
             }
+
             else{
-                std::ofstream currFile(filePath);
-                currFile.write((const char*)ciphertext, sizeof(ciphertext));
+                std::ofstream currFile(filePath, std::ios::binary);
+                currFile.write((const char*)ciphertext, length);
                 MyFile <<  filePath << std::endl;  
                 currFile.close(); 
             }
 
             BYTE *hmac_buf = new BYTE[10000]; 
             hmac_archive(buf, archive_name, hmac_buf);
-            std::ofstream code_file(codeFile);
-            code_file.write((const char*)hmac_buf, sizeof(hmac_buf));
+            
+            std::cout << "Opening codeFile" << std::endl;
+            
+            std::cout<<codeFile<<std::endl;
+            std::ofstream code_file(codeFile, std::ios::binary);
+            code_file.write((const char*)hmac_buf, SHA256_BLOCK_SIZE );
             code_file.close(); 
 
             
             delete[] buffer;
             delete[] ciphertext;
             delete[] IV;
+            delete[] hmac_buf; 
         }
         MyFile.close(); 
     }
+    else if (strcmp(mode, "extract") == 0) {
+        //bool integrity_check_passed = false; 
+        char codeFile[256]; 
+        std::cout << "archive_name: " << archive_name << std::endl;
+        strcpy(codeFile, archive_name); 
+        strcat(codeFile, "/.code");
+        std::cout << std::endl; 
+        std::cout << codeFile << std::endl;
+    
+        if(!integrity_test(buf, archive_name, codeFile)){
+            std::cout << "Password rejected" << std::endl; 
+        } else{
+            for(int i = 0; i < files; i++){
+            
+                char filePath[256]; 
+            
+                strcpy(filePath, archive_name);
+                strcat(filePath, "/"); 
+                strcat(filePath, file_names[i]);
+            
+                std::ifstream inFile(file_names[i]); 
+                
+                std::cout << "inFile: " << filePath << std::endl;
+                std::ifstream t;
+                int length;
+                t.open(filePath, std::ios::binary);   
+                t.seekg(0, std::ios::end);    
+                length = t.tellg();           
+                t.seekg(0, std::ios::beg);    
+                char *buffer = new char[length];
+                t.read(buffer, length);       
+                t.close();
 
+                char* char_IV = new char[16];
+                memcpy(char_IV, buffer, 16); 
+                BYTE* IV = reinterpret_cast<unsigned char*>(char_IV); 
+
+                char* char_ciphertext = new char[length-16]; 
+                memcpy(char_ciphertext, &buffer[16], length-16); 
+
+                BYTE *ciphertext = reinterpret_cast<unsigned char*>(char_ciphertext); 
+                
+                std::cout << "Length: " << length << std::endl;
+
+                length -= 16;
+
+                WORD key_schedule[60];
+                BYTE enc_buf[256];
+
+                aes_key_setup(buf, key_schedule, 256);
+
+                BYTE buf_in[AES_BLOCK_SIZE], buf_out[AES_BLOCK_SIZE], iv_buf[AES_BLOCK_SIZE];
+	
+                int blocks, idx;
+
+	            blocks = length / AES_BLOCK_SIZE;
+
+	            memcpy(iv_buf, IV, AES_BLOCK_SIZE);
+
+	            for (idx = 0; idx < blocks; idx++) {
+		            memcpy(buf_in, &ciphertext[idx * AES_BLOCK_SIZE], AES_BLOCK_SIZE);
+		            aes_decrypt(buf_in, buf_out, key_schedule, 256);
+		            xor_buf(iv_buf, buf_out, AES_BLOCK_SIZE);
+		            memcpy(&enc_buf[idx * AES_BLOCK_SIZE], buf_out, AES_BLOCK_SIZE);
+		            memcpy(iv_buf, buf_in, AES_BLOCK_SIZE);
+	            }
+
+                std::cout << enc_buf << std::endl;
+                //print_hex(enc_buf, length); 
+                
+                char *plaintext = reinterpret_cast<char *>(enc_buf);
+                int zeroes;
+                std::cout << plaintext[length-1] << std::endl; 
+                if(plaintext[length-1] == '1'){
+                    zeroes = 1; 
+                } else if(plaintext[length-1] == '2'){
+                    zeroes = 2; 
+                } else if(plaintext[length-1] =='3'){
+                    zeroes = 3;
+                } else if(plaintext[length-1] =='4'){
+                    zeroes = 4; 
+                } else if(plaintext[length-1] =='5'){
+                    zeroes = 5;
+                } else if(plaintext[length-1] =='6'){
+                    zeroes = 6;
+                } else if(plaintext[length-1] =='7'){
+                    zeroes = 7; 
+                } else if(plaintext[length-1] =='8'){
+                    zeroes = 8; 
+                } else if(plaintext[length-1] =='9'){
+                    zeroes = 9;
+                } else if(plaintext[length-1] =='A'){
+                    zeroes = 10; 
+                } else if(plaintext[length-1] =='B'){
+                    zeroes = 11;
+                } else if(plaintext[length-1] =='C'){
+                    zeroes = 12; 
+                } else if(plaintext[length-1] =='D'){
+                    zeroes = 13;
+                } else if(plaintext[length-1] =='E'){
+                    zeroes = 14;
+                } else if(plaintext[length-1] =='F'){
+                    zeroes = 15;
+                } else{
+                    zeroes = 16; 
+                }
+                
+                std::ofstream out_file(file_names[i]);
+                out_file.write(plaintext, length-zeroes);
+                out_file.close(); 
+
+            }
+        }
+    }
+    else if(strcmp(mode, "delete") == 0){ 
+        char codeFile[256]; 
+        std::cout << "archive_name: " << archive_name << std::endl;
+        strcpy(codeFile, archive_name); 
+        strcat(codeFile, "/.code");
+        std::cout << std::endl; 
+        std::cout << codeFile << std::endl;
+    
+
+        if(!integrity_test(buf, archive_name, codeFile)){
+            std::cout << "Password rejected" << std::endl; 
+        } else{
+            for(int i = 0; i < files; i++){ 
+                char filePath[256]; 
+            
+
+                strcpy(filePath, archive_name);
+                strcat(filePath, "/"); 
+                strcat(filePath, file_names[i]);
+            
+                remove(filePath); 
+            
+                strcat(filenamePath, "/");
+                strcat(filenamePath, ".filenames"); 
+                char tempPath[256]; 
+                strcpy(tempPath, archive_name); 
+                strcat(tempPath, "/temp.txt"); 
+                std::ifstream fileNames(filenamePath); 
+                std::ofstream temp;
+                temp.open(tempPath);
+                std::string line; 
+                while (getline(fileNames, line)){
+                    if(line.compare(filePath) != 0){
+                        temp << line << std::endl; 
+                    }
+    
+                }
+
+                fileNames.close(); 
+                temp.close(); 
+                remove(filenamePath); 
+                rename(tempPath, filenamePath); 
+            
+            }
+            char codeFile[256]; 
+            std::cout << "archive_name: " << archive_name << std::endl;
+            strcpy(codeFile, archive_name); 
+            strcat(codeFile, "/.code");
+
+
+            BYTE *hmac_buf = new BYTE[10000]; 
+            hmac_archive(buf, archive_name, hmac_buf);
+            
+            std::cout << "Opening codeFile" << std::endl;
+            
+            std::cout<<codeFile<<std::endl;
+            std::ofstream code_file(codeFile, std::ios::binary);
+            code_file.write((const char*)hmac_buf, SHA256_BLOCK_SIZE );
+            code_file.close(); 
+        }
+    }
 }
 
 int main(int argc, char *argv[]){
