@@ -36,7 +36,7 @@ void hmac_archive(BYTE *buf, char *archive_name, BYTE *hmac_buf){
     while (std::getline(infile, line)){
         std::ifstream t;
         int length;
-        std::cout << line << std::endl;
+    //    std::cout << line << std::endl;
         t.open(line, std::ios::binary);   
         t.seekg(0, std::ios::end);    
         length = t.tellg();           
@@ -187,7 +187,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
 
     //    std::cout << "files: " << files << std::endl;
         for(int i = 0; i < files; i++){
-            std::cout << "file_names[i]: " << file_names[i] << std::endl;
+      //      std::cout << "file_names[i]: " << file_names[i] << std::endl;
             //MyFile << file_names[i] << std::endl; 
             char filePath[256]; 
             
@@ -211,7 +211,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
                 length += paddingBytes;
             }
             char *buffer = new char[1000];
-            std::cout << "Length: " << length << std::endl;  
+            //std::cout << "Length: " << length << std::endl;  
             for(int idx = 0; idx < origLength; idx++ )
                 buffer[idx] = '\0';
             inFile.read(buffer, origLength);       
@@ -222,7 +222,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
             for(int idx = origLength; idx < length-1; idx++ ){
                 strcat(buffer, "0"); 
             }
-            std::cout << "padding bytes: " << paddingBytes << std::endl; 
+            //std::cout << "padding bytes: " << paddingBytes << std::endl; 
             //paddingBytes --; 
             if(paddingBytes == 0){
                 strcat(buffer, "0");
@@ -357,7 +357,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
             delete[] hmac_buf; 
         }
         MyFile.close(); 
-        std::cout << std::endl << "Files added sucessfully" << std::endl;
+    //    std::cout << std::endl << "Files added sucessfully" << std::endl;
     }
     else if (strcmp(mode, "extract") == 0) {
         //bool integrity_check_passed = false; 
@@ -472,7 +472,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
 
             }
         }
-        std::cout << std::endl << "Files extracted successfully" <<std::endl;
+    //    std::cout << std::endl << "Files extracted successfully" <<std::endl;
     }
     else if(strcmp(mode, "delete") == 0){ 
         char codeFile[256]; 
@@ -534,7 +534,7 @@ void manage_archive(BYTE *buf, char *archive_name, char **file_names, int files,
             code_file.write((const char*)hmac_buf, SHA256_BLOCK_SIZE );
             code_file.close(); 
         }
-        std::cout << std::endl << "Files deleted successfully" << std::endl;   
+     //   std::cout << std::endl << "Files deleted successfully" << std::endl;   
     }
 }
 
@@ -563,7 +563,7 @@ int main(int argc, char *argv[]){
     }
     else if (strcmp(argv[1], "add") == 0 || strcmp(argv[1], "extract") == 0 || strcmp(argv[1], "delete") == 0){
 
-        std::cout << "Entered " << argv[1] << std::endl;
+        //std::cout << "Entered " << argv[1] << std::endl;
         bool password_found = false; 
         char *pwd; 
         char *archive_name; 
@@ -595,7 +595,7 @@ int main(int argc, char *argv[]){
             //           new char*[argc-5];
             int idx = 0;
             for(int i = 5; i < argc; i++){
-                file_names[idx] = argv[i]; 
+                file_names[idx++] = argv[i]; 
          //       std::cout << file_names[idx++] << std::endl; 
             }
             files = idx;
@@ -616,7 +616,7 @@ int main(int argc, char *argv[]){
 
         }
         //std::cout << std::endl;
-    
+        std::cout << "Files: " << files << std::endl; 
         manage_archive(buf, archive_name, file_names, files, argv[1]);
     
         delete[] file_names;
