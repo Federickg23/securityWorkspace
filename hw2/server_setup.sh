@@ -44,3 +44,9 @@ openssl verify -CAfile intermediate/certs/ca-chain.cert.pem \
 #       -WWW -verify_return_error \
 #       -CAfile $HOME/ca/intermediate/certs/ca-chain.cert.pem \
 #       -ign_eof  
+
+#Create file to be served up
+cd $HOME/ca/server
+touch index.html 
+echo "The retrieval from the server is working properly
+" >> index.html
