@@ -21,10 +21,10 @@ openssl req -config intermediate/openssl.cnf \
       -key client/private/web_client.key.pem \
       -new -sha256 -out client/csr/web_client.csr.pem
 
-# openssl ca -config $HOME/ca/intermediate/openssl.cnf \
-#       -extensions usr_cert -days 375 -notext -md sha256 \
-#       -in client/csr/web_client.csr.pem \
-#       -out client/certs/web_client.cert.pem
+openssl ca -config $HOME/ca/intermediate/openssl.cnf \
+      -extensions usr_cert -days 375 -notext -md sha256 \
+      -in client/csr/web_client.csr.pem \
+      -out client/certs/web_client.cert.pem
 
 
 chmod 444 client/certs/web_client.cert.pem
