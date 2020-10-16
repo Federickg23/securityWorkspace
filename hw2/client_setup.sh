@@ -34,9 +34,8 @@ openssl x509 -noout -text \
 openssl verify -CAfile intermediate/certs/ca-chain.cert.pem \
       client/certs/web_client.cert.pem
 
-openssl s_client -cert client/certs/web_client.cert.pem \
-      -key client/private/web_client.key.pem \
-      -pass pass:Trondude23\
-      -CAfile $HOME/ca/intermediate/certs/ca-chain.cert.pem \
-      -verify_return_error -ign_eof \
-      -showcerts 
+# openssl s_client -cert client/certs/web_client.cert.pem \
+#       -key client/private/web_client.key.pem \
+#       -CAfile $HOME/ca/intermediate/certs/ca-chain.cert.pem \
+#       -verify_return_error -ign_eof \
+#       -showcerts 

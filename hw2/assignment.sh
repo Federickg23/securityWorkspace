@@ -363,3 +363,15 @@ cat intermediate/certs/intermediate.cert.pem \
 chmod 444 intermediate/certs/ca-chain.cert.pem
 
 #Now that all that is done, sign server and client certificates. Look at server.sh and client.sh
+
+#Create file to be served up
+cd $HOME/ca
+touch index.html 
+echo "The retrieval from the server is working properly
+" >> index.html
+
+bash server_setup.sh
+
+bash client_setup.sh
+echo " "
+echo "Now run server_start.sh in one terminal and client_start.sh in another terminal"
