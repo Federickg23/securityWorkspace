@@ -36,5 +36,7 @@ openssl verify -CAfile intermediate/certs/ca-chain.cert.pem \
 
 openssl s_client -cert client/certs/web_client.cert.pem \
       -key client/private/web_client.key.pem \
-      -verify_return_error \
-      -showcerts -CAfile $HOME/ca/intermediate/certs/ca-chain.cert.pem \
+      -pass pass:Trondude23\
+      -CAfile $HOME/ca/intermediate/certs/ca-chain.cert.pem \
+      -verify_return_error -ign_eof \
+      -showcerts 
