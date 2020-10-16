@@ -1,5 +1,4 @@
 #!/bin/bash
-chmod +x assignment.sh
 
 cd $HOME
 
@@ -97,10 +96,10 @@ commonName                      = Common Name
 emailAddress                    = Email Address
 
 # Optionally, specify some defaults.
-countryName_default             = GB
-stateOrProvinceName_default     = England
+countryName_default             = US
+stateOrProvinceName_default     = New York
 localityName_default            =
-0.organizationName_default      = Alice Ltd
+0.organizationName_default      = Tester 
 organizationalUnitName_default  =
 emailAddress_default            =
 
@@ -264,10 +263,10 @@ commonName                      = Common Name
 emailAddress                    = Email Address
 
 # Optionally, specify some defaults.
-countryName_default             = GB
-stateOrProvinceName_default     = England
+countryName_default             = US
+stateOrProvinceName_default     = New York
 localityName_default            =
-0.organizationName_default      = Alice Ltd
+0.organizationName_default      = Tester
 organizationalUnitName_default  =
 emailAddress_default            =
 
@@ -323,7 +322,6 @@ cd $HOME/ca  #/ca
 pwd
 echo "Creating intermediate key"
 
-
 openssl genrsa -aes256 \
       -out intermediate/private/intermediate.key.pem 4096
 
@@ -345,14 +343,15 @@ openssl ca -config openssl.cnf -extensions v3_intermediate_ca \
       -days 3650 -notext -md sha256 \
       -in intermediate/csr/intermediate.csr.pem \
       -out intermediate/certs/intermediate.cert.pem
+
 chmod 444 intermediate/certs/intermediate.cert.pem
+
 
 
 #Verify the Intermediate Certificate 
 
 openssl x509 -noout -text \
       -in intermediate/certs/intermediate.cert.pem
-
 
 openssl verify -CAfile certs/ca.cert.pem \
       intermediate/certs/intermediate.cert.pem
@@ -362,3 +361,5 @@ openssl verify -CAfile certs/ca.cert.pem \
 cat intermediate/certs/intermediate.cert.pem \
       certs/ca.cert.pem > intermediate/certs/ca-chain.cert.pem
 chmod 444 intermediate/certs/ca-chain.cert.pem
+
+#Now that all that is done, sign server and client certificates. Look at server.sh and client.sh
