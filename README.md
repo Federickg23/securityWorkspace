@@ -1,3 +1,3 @@
-# securtiyWorkspace
+# securityWorkspace
 
-Here you will see a variety of folders, each corrisponding to a different assignment in SecurityI. 
+Here you will see a variety of folders, each corresponding to a different assignment in Security I. 
