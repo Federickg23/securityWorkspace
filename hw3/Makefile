@@ -4,6 +4,7 @@ CXXFLAGS = -Wall -g
 install: mail-in mail-out
 	bash create-tree.sh $(DEST)
 	cp mail-in mail-out $(DEST)/bin
+	make clean
 
 .PHONY: mail-in
 mail-in: mail-in.o
