@@ -119,10 +119,13 @@ int main(int argc, char *argv[]){
 
     std::string message = ""; 
     std::string line; 
-    while (std::getline(std::cin, line) && line.length() != 0) {
+    while (std::getline(std::cin, line)) {
         // std::cout << "Current line: " << line << std::endl;
         if(line.front() == '.'){
+            if(line == ".")
+                break;
             message += line.substr(1) + "\n"; 
+            
         }
         else {
             message += line + "\n";

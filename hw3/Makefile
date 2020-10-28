@@ -20,6 +20,10 @@ mail-out: mail-out.o
 mail-out.o: mail-out.cpp 
 	g++ $(CXXFLAGS) -c mail-out.cpp
 
+.PHONY: tests
+test: 
+	bash tests.sh $(DEST)
+
 .PHONY: clean
 clean:
 	rm -rf *.o *.swp mail-in mail-out

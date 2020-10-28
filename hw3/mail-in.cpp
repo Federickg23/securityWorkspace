@@ -30,6 +30,7 @@ bool checkSender(std::string username){
 }
 
 int messageHandler(std::string message){
+    std::cout << message << std::endl; 
     int begin = message.find("To:");
     int end = message.substr(begin).find("\n");
     std::string userList = message.substr(begin + 4, end-2);
@@ -94,9 +95,16 @@ std::string parseMessage(std::string message){
     std::string formattedMessage = "";
     std::string line; 
     std::string recipients = "To: ";
+
+    std::string emptyResult = "";
+    int count = 0; 
     while(std::getline(origMessage, line)){
         if(!isData){
             if(line.find("MAIL") != std::string::npos && line.find("FROM:") != std::string::npos){
+                if(count != 0){
+                    fprintf(stderr, "Control lines out of order\n"); 
+                    return emptyResult;
+                }
                 int begin = line.find("<");
                 int end = line.find(">");
                 if(begin == std::string::npos || end == std::string::npos){
@@ -109,20 +117,26 @@ std::string parseMessage(std::string message){
                 }
                 else{
                     fprintf(stderr, "Sender name improperly formatted\n");
-                    std::string emptyResult;
+                    
                     return emptyResult;
                 }
+                count ++; 
             }
             else if(line.find("RCPT") != std::string::npos && line.find("TO:") != std::string::npos){
+                if (count < 1){
+                    fprintf(stderr, "Control lines out of order\n"); 
+                    return emptyResult;
+                }
                 int begin = line.find("<");
                 int end = line.find(">");
                 if(begin == std::string::npos || end == std::string::npos){
-                    fprintf(stderr,  "RCPT Line improperly formatted");
+                    fprintf(stderr,  "RCPT Line improperly formatted\n");
                     break; 
                 } else{
                     recipients += line.substr(begin+1, end-begin-1) + ", "; 
 
                 }
+                count ++; 
             }
             else if(line == "DATA"){
                 formattedMessage += recipients.substr(0, recipients.size()-2);
@@ -130,7 +144,8 @@ std::string parseMessage(std::string message){
                 isData = true; 
             }
             else{
-                fprintf(stderr,  "headers improperly formatted");
+                fprintf(stderr,  "headers improperly formatted\n");
+                return emptyResult; 
             }
         }
         else{
@@ -167,11 +182,13 @@ int main(){
     }
     if (!endFound){
         if (messages.size() < 1){
-            fprintf(stderr,  "Files inputted incorrectly. Please ensure each message has a terminating period.");
+            fprintf(stderr,  "Files inputted incorrectly. Please ensure each message has a terminating period.\n");
             return 1; 
         }
-        else 
-            fprintf(stderr,  "Warning: one or more files inputted incorrectly");
+        else {
+            fprintf(stderr,  "Warning: one or more files inputted incorrectly\n");
+            return 1; 
+        }
             
             
     }
