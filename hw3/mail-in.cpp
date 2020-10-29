@@ -30,7 +30,7 @@ bool checkSender(std::string username){
 }
 
 int messageHandler(std::string message){
-    std::cout << message << std::endl; 
+    // std::cout << message << std::endl; 
     int begin = message.find("To:");
     int end = message.substr(begin).find("\n");
     std::string userList = message.substr(begin + 4, end-2);
@@ -163,8 +163,13 @@ int main(){
     std::string message = ""; 
 
     bool endFound = false; 
+    float high = 1e9;
     for (std::string line; std::getline(std::cin, line);) {
         // std::cout << "Current line: " << line << std::endl;
+        if(line.length() >= high){
+            fprintf(stderr, "Input line too long");
+            return 1;
+        }
        
         if(line == "."){
             message += "."; 
