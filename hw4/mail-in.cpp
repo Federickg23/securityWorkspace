@@ -1,4 +1,6 @@
 #include <string.h>
+#include <strings.h>
+#include <dirent.h>
 #include <algorithm>
 #include <sstream>
 #include <stdio.h>
@@ -12,21 +14,21 @@
 
 bool checkSender(std::string username){
     std::string path = "./mail/";
-    path += username; 
-
-    transform(path.begin(), path.end(), path.begin(), ::tolower);
-    
-    struct stat info;
-
-    int statRC = stat( path.c_str(), &info );
-    if( statRC != 0 )
-    {
-        if (errno == ENOENT)  { return 0; } 
-        if (errno == ENOTDIR) { return 0; } 
-        return -1;
+    // std::cout << username << std::endl;
+    DIR *d = opendir(path.c_str());
+    struct dirent *entry = nullptr;
+    if (d != nullptr) {
+        while ((entry = readdir(d)))
+            if(entry != nullptr){
+                if(strcasecmp(entry->d_name, username.c_str())==0){
+                    closedir(d);
+                    return true;
+                }  
+                // printf ("%s\n", entry->d_name);
+            }
     }
-
-    return ( info.st_mode & S_IFDIR ) ? 1 : 0;
+    closedir(d); 
+    return false;
 }
 
 int messageHandler(std::string message){
@@ -109,6 +111,7 @@ std::string parseMessage(std::string message){
                 int end = line.find(">");
                 if(begin == std::string::npos || end == std::string::npos){
                     fprintf(stderr, "FROM Line improperly formatted\n");
+                    return emptyResult;
                     break; 
                 }
                 if(checkSender(line.substr(begin+1, end-begin-1))){
@@ -117,7 +120,6 @@ std::string parseMessage(std::string message){
                 }
                 else{
                     fprintf(stderr, "Sender name improperly formatted\n");
-                    
                     return emptyResult;
                 }
                 count ++; 
@@ -134,7 +136,6 @@ std::string parseMessage(std::string message){
                     break; 
                 } else{
                     recipients += line.substr(begin+1, end-begin-1) + ", "; 
-
                 }
                 count ++; 
             }
@@ -163,6 +164,8 @@ int main(){
     std::string message = ""; 
 
     bool endFound = false; 
+    bool validMessage = true; 
+
     float high = 1e9;
     for (std::string line; std::getline(std::cin, line);) {
         // std::cout << "Current line: " << line << std::endl;
@@ -173,9 +176,12 @@ int main(){
        
         if(line == "."){
             message += "."; 
-            messages.push(message);
+            if(validMessage){
+                messages.push(message);
+            }
             message = ""; 
             endFound = true; 
+            validMessage = true; 
         }
         else{        
             message += line; 
@@ -188,11 +194,13 @@ int main(){
     if (!endFound){
         if (messages.size() < 1){
             fprintf(stderr,  "Files inputted incorrectly. Please ensure each message has a terminating period.\n");
-            return 1; 
+            // return 1; 
+            validMessage = false; 
         }
         else {
             fprintf(stderr,  "Warning: one or more files inputted incorrectly\n");
-            return 1; 
+            // return 1; 
+            validMessage = false; 
         }
             
             

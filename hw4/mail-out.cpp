@@ -156,7 +156,7 @@ int main(int argc, char *argv[]){
     newFile.insert(0, rcpt);
     newFile.insert(0, "./mail/");
     // std::cout << "Filepath: " << newFile << std::endl; 
-    printf ("Next file: %s\n", newFile.c_str());
+    // printf ("Next file: %s\n", newFile.c_str());
     std::ofstream MyFile(newFile.c_str(), std::ofstream::app);
     MyFile.write(message.c_str(), message.size());
     MyFile.close();
