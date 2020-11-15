@@ -8,19 +8,20 @@ install: mail-in mail-out
 	make clean
 	echo "Please do not forget to remove users and groups that have been created"
 
-.PHONY: mail-in
-mail-in: mail-in.o
-	g++ $(CXXFLAGS) -o mail-in mail-in.o 
+mail-in: mail-in.o mail_utils.o mail-out
+	g++ -std=c++17 mail-in.o mail_utils.o -lstdc++fs -o mail-in
 
-mail-in.o: mail-in.cpp 
-	g++ $(CXXFLAGS) -c mail-in.cpp
+mail-out: mail-out.o mail_utils.o
+	g++ -std=c++17 mail-out.o mail_utils.o -lstdc++fs -o mail-out
 
-.PHONY: mail-out
-mail-out: mail-out.o
-	g++ $(CXXFLAGS) -o mail-out mail-out.o 
+mail-in.o: mail-in.cpp
+	g++ -std=c++17 -c mail-in.cpp
 
-mail-out.o: mail-out.cpp 
-	g++ $(CXXFLAGS) -c mail-out.cpp
+mail-out.o: mail-out.cpp
+	g++ -std=c++17 -c mail-out.cpp
+
+mail_utils.o: mail_utils.cpp
+	g++ -std=c++17 -c mail_utils.cpp
 
 
 .PHONY: delete
